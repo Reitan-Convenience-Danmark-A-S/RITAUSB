@@ -52,7 +52,7 @@ function Write-SectionSuccess {
 }
 #endregion
 
-$ScriptName = 'ITM8 - Organic Plant Protein'
+$ScriptName = 'ITM8 - Reitan'
 $ScriptVersion = '25.01.22.1'
 Write-Host -ForegroundColor Green "$ScriptName $ScriptVersion"
 #iex (irm functions.garytown.com) #Add custom functions used in Script Hosting in GitHub
@@ -66,8 +66,6 @@ $ComputerProduct = (Get-MyComputerProduct)
 $ComputerManufacturer = (Get-MyComputerManufacturer -Brief)
 #>
 
-
-
 #Variables to define the Windows OS / Edition etc to be applied during OSDCloud
 $Product = (Get-MyComputerProduct)
 $Model = (Get-MyComputerModel)
@@ -75,7 +73,7 @@ $Manufacturer = (Get-CimInstance -ClassName Win32_ComputerSystem).Manufacturer
 $OSVersion = 'Windows 11' #Used to Determine Driver Pack
 $OSReleaseID = '24H2' #Used to Determine Driver Pack
 $OSName = 'Windows 11 24H2 x64'
-$OSEdition = 'Pro'
+$OSEdition = 'Enterprise'
 $OSActivation = 'Retail'
 $OSLanguage = 'da-DK'
 
@@ -85,8 +83,8 @@ $Global:MyOSDCloud = [ordered]@{
     Restart = [bool]$False
     RecoveryPartition = [bool]$true
     OEMActivation = [bool]$True
-    WindowsUpdate = [bool]$true
-    WindowsUpdateDrivers = [bool]$true
+    WindowsUpdate = [bool]$false
+    WindowsUpdateDrivers = [bool]$false
     WindowsDefenderUpdate = [bool]$true
     SetTimeZone = [bool]$true
     ClearDiskConfirm = [bool]$False
@@ -99,11 +97,13 @@ $Global:MyOSDCloud = [ordered]@{
 #$Global:MyOSDCloud.DriverPackName = 'Microsoft Update Catalog'
 
 #Used to Determine Driver Pack
+<#
 $DriverPack = Get-OSDCloudDriverPack -Product $Product -OSVersion $OSVersion -OSReleaseID $OSReleaseID
 
 if ($DriverPack){
     $Global:MyOSDCloud.DriverPackName = $DriverPack.Name
 }
+#>
 #$Global:MyOSDCloud.DriverPackName = "None"
 
 <#If Drivers are expanded on the USB Drive, disable installing a Driver Pack
@@ -130,13 +130,13 @@ if (Test-HPIASupport){
     $Global:MyOSDCloud.HPBIOSUpdate = [bool]$true
     #$Global:MyOSDCloud.HPCMSLDriverPackLatest = [bool]$true #In Test 
     #Set HP BIOS Settings to what I want:
-    iex (irm https://gist.githubusercontent.com/DelPost/b76fffec50cbe69a693a91eee1c1d2b1/raw/f4c44db28eeb6d5e319bba63c4e08e0ea7cfa0e8/Manage-HPBiosSettings.ps1)
+    iex (irm https://raw.githubusercontent.com/Reitan-Convenience-Danmark-A-S/RITAUSB/refs/heads/main/Manage-HPBiosSettings.ps1)
     Manage-HPBiosSettings -SetSettings
 }
 
 if ($Manufacturer -match "Lenovo") {
     #Set Lenovo BIOS Settings to what I want:
-    iex (irm https://gist.githubusercontent.com/DelPost/b76fffec50cbe69a693a91eee1c1d2b1/raw/f4c44db28eeb6d5e319bba63c4e08e0ea7cfa0e8/Manage-LenovoBiosSettings.ps1)
+    iex (irm https://raw.githubusercontent.com/Reitan-Convenience-Danmark-A-S/RITAUSB/refs/heads/main/Manage-LenovoBiosSettings.ps1)
     try {
         Manage-LenovoBIOSSettings -SetSettings
     }
@@ -168,8 +168,8 @@ write-host -ForegroundColor Yellow "Updating $OfflineModulePath using $ModulePat
 copy-item "$ModulePath\*" "$OfflineModulePath"  -Force -Recurse
 #>
 #Copy CMTrace Local:
-if (Test-path -path "x:\windows\system32\cmtrace.exe"){
-    copy-item "x:\windows\system32\cmtrace.exe" -Destination "C:\Windows\System\cmtrace.exe" -verbose
+if (Test-path -path "D:\OSDCloud\Files\cmtrace.exe"){
+    copy-item "D:\OSDCloud\Files\cmtrace.exe" -Destination "C:\Windows\System32\cmtrace.exe" -verbose
 }
 
 if ($Manufacturer -match "Lenovo") {
@@ -241,17 +241,17 @@ Write-Host -ForegroundColor Green "Create C:\Windows\Provisioning\Autopilot\Auto
 $AutopilotConfigurationFileJson = @"
 {
     "CloudAssignedDomainJoinMethod":  0,
-    "CloudAssignedDeviceName":  "%SERIAL%",
+    "CloudAssignedDeviceName":  "RITA-%SERIAL%",
     "CloudAssignedAutopilotUpdateTimeout":  1800000,
     "CloudAssignedForcedEnrollment":  1,
     "Version":  2049,
-    "CloudAssignedTenantId":  "e685b5dd-3996-4052-a854-e834db07fdf0",
+    "CloudAssignedTenantId":  "7891a292-cac1-43a3-84c9-af61ca7e4445",
     "CloudAssignedAutopilotUpdateDisabled":  1,
-    "ZtdCorrelationId":  "d042fa48-1311-4039-8562-a5de9faf58ad",
-    "Comment_File":  "Profile User Driven, Microsoft Entra joined",
-    "CloudAssignedOobeConfig":  1310,
-    "CloudAssignedTenantDomain":  "organicplantprotein.dk",
-    "CloudAssignedAadServerData":  "{\"ZeroTouchConfig\":{\"CloudAssignedTenantUpn\":\"\",\"ForcedEnrollment\":1,\"CloudAssignedTenantDomain\":\"organicplantprotein.dk\"}}",
+    "ZtdCorrelationId":  "6668eb2c-5d3f-413d-99a5-1f2145da1ec6",
+    "Comment_File":  "Profile RITASelfDeploying",
+    "CloudAssignedOobeConfig":  1406,
+    "CloudAssignedTenantDomain":  "7elevenasedk.onmicrosoft.com",
+    "CloudAssignedAadServerData":  "{\"ZeroTouchConfig\":{\"CloudAssignedTenantUpn\":\"\",\"ForcedEnrollment\":1,\"CloudAssignedTenantDomain\":\"7elevenasedk.onmicrosoft.com\"}}",
     "CloudAssignedLanguage":  "os-default"
 }
 "@
@@ -271,13 +271,13 @@ PowerShell -NoL -Com Set-ExecutionPolicy RemoteSigned -Force
 Set Path = %PATH%;C:\Program Files\WindowsPowerShell\Scripts
 Start /Wait PowerShell -NoL -C Install-Module AutopilotOOBE -Force -Verbose
 Start /Wait PowerShell -NoL -C Install-Module OSD -Force -Verbose
-Start /Wait PowerShell -NoL -C Invoke-WebPSScript https://gist.githubusercontent.com/DelPost/b76fffec50cbe69a693a91eee1c1d2b1/raw/f4c44db28eeb6d5e319bba63c4e08e0ea7cfa0e8/Install-EmbeddedProductKey.ps1
-Start /Wait PowerShell -NoL -C Invoke-WebPSScript https://gist.githubusercontent.com/DelPost/b76fffec50cbe69a693a91eee1c1d2b1/raw/f4c44db28eeb6d5e319bba63c4e08e0ea7cfa0e8/AP-Prereq.ps1
-Start /Wait PowerShell -NoL -C Invoke-WebPSScript https://gist.githubusercontent.com/DelPost/b76fffec50cbe69a693a91eee1c1d2b1/raw/b4121ef40506c4f9718a58ded9889aa7c1490970/AddAutopilotDevice.ps1
+Start /Wait PowerShell -NoL -C Invoke-WebPSScript https://raw.githubusercontent.com/Reitan-Convenience-Danmark-A-S/RITAUSB/refs/heads/main/Install-EmbeddedProductKey.ps1
+Start /Wait PowerShell -NoL -C Invoke-WebPSScript https://raw.githubusercontent.com/Reitan-Convenience-Danmark-A-S/RITAUSB/refs/heads/main/AP-Prereq.ps1
+Start /Wait PowerShell -NoL -C Invoke-WebPSScript https://raw.githubusercontent.com/Reitan-Convenience-Danmark-A-S/RITAUSB/refs/heads/main/AddAutopilotDeviceRITA.ps1
 Start /Wait PowerShell -NoL -C Start-OOBEDeploy
-Start /Wait PowerShell -NoL -C Invoke-WebPSScript https://gist.githubusercontent.com/DelPost/b76fffec50cbe69a693a91eee1c1d2b1/raw/f4c44db28eeb6d5e319bba63c4e08e0ea7cfa0e8/TPM.ps1
-Start /Wait PowerShell -NoL -C Invoke-WebPSScript https://gist.githubusercontent.com/DelPost/b76fffec50cbe69a693a91eee1c1d2b1/raw/f4c44db28eeb6d5e319bba63c4e08e0ea7cfa0e8/Lenovo_BIOS_Settings.ps1
-Start /Wait PowerShell -NoL -C Invoke-WebPSScript https://gist.githubusercontent.com/DelPost/b76fffec50cbe69a693a91eee1c1d2b1/raw/f4c44db28eeb6d5e319bba63c4e08e0ea7cfa0e8/CleanUp.ps1
+Start /Wait PowerShell -NoL -C Invoke-WebPSScript https://raw.githubusercontent.com/Reitan-Convenience-Danmark-A-S/RITAUSB/refs/heads/main/TPM.ps1
+Start /Wait PowerShell -NoL -C Invoke-WebPSScript https://raw.githubusercontent.com/Reitan-Convenience-Danmark-A-S/RITAUSB/refs/heads/main/Lenovo_BIOS_Settings.ps1
+Start /Wait PowerShell -NoL -C Invoke-WebPSScript https://raw.githubusercontent.com/Reitan-Convenience-Danmark-A-S/RITAUSB/refs/heads/main/CleanUp.ps1
 Start /Wait PowerShell -NoL -C Restart-Computer -Force
 '@
 $OOBECMD | Out-File -FilePath 'C:\Windows\System32\OOBE.cmd' -Encoding ascii -Force
@@ -288,7 +288,7 @@ $OOBECMD | Out-File -FilePath 'C:\Windows\System32\OOBE.cmd' -Encoding ascii -Fo
 Write-Host -ForegroundColor Green "Create C:\Windows\Setup\Scripts\SetupComplete.cmd"
 $SetupCompleteCMD = @'
 powershell.exe -Command Set-ExecutionPolicy RemoteSigned -Force
-powershell.exe -Command "& {IEX (IRM https://gist.githubusercontent.com/DelPost/b76fffec50cbe69a693a91eee1c1d2b1/raw/dd956182d58d0189aafa0114adc1831178cc0b0e/oobetasks.ps1)}"
+powershell.exe -Command "& {IEX (IRM https://raw.githubusercontent.com/Reitan-Convenience-Danmark-A-S/RITAUSB/refs/heads/main/oobetasksRITA.ps1)}"
 '@
 $SetupCompleteCMD | Out-File -FilePath 'C:\Windows\Setup\Scripts\SetupComplete.cmd' -Encoding ascii -Force
 
