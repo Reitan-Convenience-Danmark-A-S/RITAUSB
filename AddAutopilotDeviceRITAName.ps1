@@ -14,9 +14,13 @@ Start-Transcript -Path (Join-Path "$env:ProgramData\Microsoft\IntuneManagementEx
 Write-Host "Adding device to Autopilot" -ForegroundColor Green
 
 Set-ExecutionPolicy -ExecutionPolicy Bypass -Force
+
+$name = Read-Host 'New Computer Name'
+Rename-Computer -NewName $name -Force
+
 Install-Module -Name Get-WindowsAutopilotInfo -Force -Verbose
-$Computername = Read-Host "Define Computername"
-Get-WindowsAutoPilotInfo -Online -TenantId '7891a292-cac1-43a3-84c9-af61ca7e4445' -AppId '1ecea92f-2e8d-4772-8d81-5fba68b86b95' -AppSecret 'Ecf8Q~kExB7Vjzpb-Hf3ydFEvzbHJo6IjShBkarR' -AssignedComputerName '$Computername' -GroupTag 'RITA' -Assign
+
+Get-WindowsAutoPilotInfo -Online -TenantId '7891a292-cac1-43a3-84c9-af61ca7e4445' -AppId '1ecea92f-2e8d-4772-8d81-5fba68b86b95' -AppSecret 'Ecf8Q~kExB7Vjzpb-Hf3ydFEvzbHJo6IjShBkarR' -AssignedComputerName '$name' -GroupTag 'RITA' -Assign
 
 Stop-Transcript
 
